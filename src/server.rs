@@ -322,7 +322,8 @@ where
     ) -> io::Result<Self> {
         use actix_server::ssl::{RustlsAcceptor, SslError};
 
-        let protos = vec!["h2".to_string().into(), "http/1.1".to_string().into()];
+        // TODO(fabrice): understand why h2 is failing.
+        let protos = vec!["http/1.1".to_string().into()];
         config.set_protocols(&protos);
 
         let acceptor = RustlsAcceptor::new(config);
