@@ -24,6 +24,7 @@ use crate::{
     body::{Body, BodySize, MessageBody, ResponseBody},
     Extensions,
 };
+use http::header::CACHE_CONTROL;
 
 use super::codec::Codec;
 use super::payload::{Payload, PayloadSender, PayloadStatus};
@@ -678,7 +679,10 @@ where
                             if !this.flags.contains(Flags::STARTED) {
                                 trace!("Slow request timeout");
                                 let _ = self.as_mut().send_response(
-                                    Response::RequestTimeout().finish().drop_body(),
+                                    Response::RequestTimeout()
+                                        .set_header(CACHE_CONTROL, "no-cache")
+                                        .finish()
+                                        .drop_body(),
                                     ResponseBody::Other(Body::Empty),
                                 );
                                 this = self.as_mut().project();
