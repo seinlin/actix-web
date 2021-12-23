@@ -677,7 +677,7 @@ where
                         } else {
                             // timeout on first request (slow request) return 408
                             if !this.flags.contains(Flags::STARTED) {
-                                trace!("Slow request timeout");
+                                error!("Slow request timeout");
                                 let _ = self.as_mut().send_response(
                                     Response::RequestTimeout()
                                         .set_header(CACHE_CONTROL, "no-cache")
