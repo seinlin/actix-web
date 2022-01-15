@@ -9,7 +9,7 @@ use actix_rt::time::{delay_until, Delay, Instant};
 use actix_service::Service;
 use bitflags::bitflags;
 use bytes::{Buf, BytesMut};
-use log::{error, trace};
+use log::{debug, error, trace};
 use pin_project::pin_project;
 
 use crate::cloneable::CloneableService;
@@ -766,6 +766,7 @@ where
 
                     inner.as_mut().poll_request(cx)?;
                     if let Some(true) = should_disconnect {
+                        debug!("DEBUG ACTIX - should_disconnect is true.");
                         let inner_p = inner.as_mut().project();
                         inner_p.flags.insert(Flags::READ_DISCONNECT);
                         if let Some(mut payload) = inner_p.payload.take() {
@@ -868,11 +869,13 @@ where
         // If buf is full return but do not disconnect since
         // there is more reading to be done
         if buf.len() >= HW_BUFFER_SIZE {
+            debug!("DEBUG ACTIX buffer is full return Some(false).");
             return Ok(Some(false));
         }
 
         let remaining = buf.capacity() - buf.len();
         if remaining < LW_BUFFER_SIZE {
+            debug!("DEBUG ACTIX remaining buffer is low.");
             buf.reserve(HW_BUFFER_SIZE - remaining);
         }
 
@@ -888,7 +891,9 @@ where
                 }
             }
             Poll::Ready(Err(e)) => {
+                debug!("DEBUG ACTIX read Error: {:?}", e);
                 return if e.kind() == io::ErrorKind::WouldBlock {
+                    error!("DEBUG ACTIX WouldBlock - read_some: {}.", read_some);
                     if read_some {
                         Ok(Some(false))
                     } else {
