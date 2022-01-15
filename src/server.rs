@@ -1,3 +1,4 @@
+use log::{debug, error};
 use std::{
     any::Any,
     fmt, io,
@@ -117,6 +118,7 @@ where
     where
         CB: Fn(&dyn Any, &mut Extensions) + Send + Sync + 'static,
     {
+        debug!("DEBUG ACTIX on_connect.");
         HttpServer {
             factory: self.factory,
             config: self.config,
@@ -269,13 +271,14 @@ where
         let cfg = self.config.clone();
         let factory = self.factory.clone();
         let addr = lst.local_addr().unwrap();
+        debug!("DEBUG ACTIX listen {:?}.", addr);
         self.sockets.push(Socket {
             addr,
             scheme: "http",
         });
         let on_connect_fn = self.on_connect_fn.clone();
 
-        self.builder = self.builder.listen(
+        self.builder = match self.builder.listen(
             format!("actix-web-service-{}", addr),
             lst,
             move || {
@@ -302,7 +305,16 @@ where
                 svc.finish(map_config(factory(), move |_| cfg.clone()))
                     .tcp()
             },
-        )?;
+        ) {
+            Ok(t) => {
+                debug!("DEBUG ACTIX listen ok.");
+                t
+            },
+            Err(e) => {
+                error!("DEBUG ACTIX listen error: {:?}", e);
+                return Err(e);
+            }
+        };
         Ok(self)
     }
 
